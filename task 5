@@ -1,0 +1,214 @@
+import java.util.ArrayList;
+import java.util.Scanner;
+import java.io.*;
+
+class Student implements Serializable {
+    private String name;
+    private int rollNumber;
+    private String grade;
+    private String email;
+    
+    public Student(String name, int rollNumber, String grade, String email) {
+        this.name = name;
+        this.rollNumber = rollNumber;
+        this.grade = grade;
+        this.email = email;
+    }
+    
+    public String getName() {
+        return name;
+    }
+    
+    public void setName(String name) {
+        this.name = name;
+    }
+    
+    public int getRollNumber() {
+        return rollNumber;
+    }
+    
+    public void setRollNumber(int rollNumber) {
+        this.rollNumber = rollNumber;
+    }
+    
+    public String getGrade() {
+        return grade;
+    }
+    
+    public void setGrade(String grade) {
+        this.grade = grade;
+    }
+    
+    public String getEmail() {
+        return email;
+    }
+    
+    public void setEmail(String email) {
+        this.email = email;
+    }
+    
+    @Override
+    public String toString() {
+        return "Student [Name=" + name + ", Roll Number=" + rollNumber + ", Grade=" + grade + ", Email=" + email + "]";
+    }
+}
+
+class StudentManagementSystem implements Serializable {
+    private ArrayList<Student> students;
+    
+    public StudentManagementSystem() {
+        students = new ArrayList<>();
+    }
+    
+    public void addStudent(Student student) {
+        students.add(student);
+    }
+    
+    public boolean removeStudent(int rollNumber) {
+        for (Student student : students) {
+            if (student.getRollNumber() == rollNumber) {
+                students.remove(student);
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    public Student searchStudent(int rollNumber) {
+        for (Student student : students) {
+            if (student.getRollNumber() == rollNumber) {
+                return student;
+            }
+        }
+        return null;
+    }
+    
+    public void displayAllStudents() {
+        for (Student student : students) {
+            System.out.println(student);
+        }
+    }
+}
+
+public class Main {
+    private static StudentManagementSystem sms = new StudentManagementSystem();
+    private static final String FILE_NAME = "students.dat";
+    
+    public static void main(String[] args) {
+        loadStudentData();
+        Scanner scanner = new Scanner(System.in);
+        int choice;
+        
+        do {
+            System.out.println("Student Management System");
+            System.out.println("1. Add Student");
+            System.out.println("2. Remove Student");
+            System.out.println("3. Search Student");
+            System.out.println("4. Display All Students");
+            System.out.println("5. Exit");
+            System.out.print("Enter your choice: ");
+            choice = scanner.nextInt();
+            
+            switch (choice) {
+                case 1:
+                    addStudent(scanner);
+                    break;
+                case 2:
+                    removeStudent(scanner);
+                    break;
+                case 3:
+                    searchStudent(scanner);
+                    break;
+                case 4:
+                    sms.displayAllStudents();
+                    break;
+                case 5:
+                    saveStudentData();
+                    System.out.println("Exiting...");
+                    break;
+                default:
+                    System.out.println("Invalid choice. Try again.");
+            }
+        } while (choice != 5);
+        
+        scanner.close();
+    }
+    
+    private static void addStudent(Scanner scanner) {
+        String name;
+        int rollNumber;
+        String grade;
+        String email;
+        
+        while (true) {
+            System.out.print("Enter name: ");
+            name = scanner.next();
+            if (!name.isEmpty()) break;
+            System.out.println("Name cannot be empty. Try again.");
+        }
+        
+        while (true) {
+            System.out.print("Enter roll number: ");
+            rollNumber = scanner.nextInt();
+            if (rollNumber > 0) break;
+            System.out.println("Roll number must be a positive integer. Try again.");
+        }
+        
+        while (true) {
+            System.out.print("Enter grade: ");
+            grade = scanner.next();
+            if (!grade.isEmpty()) break;
+            System.out.println("Grade cannot be empty. Try again.");
+        }
+        
+        while (true) {
+            System.out.print("Enter email: ");
+            email = scanner.next();
+            if (email.contains("@")) break;
+            System.out.println("Invalid email. Try again.");
+        }
+        
+        sms.addStudent(new Student(name, rollNumber, grade, email));
+    }
+    
+    private static void removeStudent(Scanner scanner) {
+        System.out.print("Enter roll number: ");
+        int rollNumber = scanner.nextInt();
+        
+        if (sms.removeStudent(rollNumber)) {
+            System.out.println("Student removed successfully.");
+        } else {
+            System.out.println("Student not found.");
+        }
+    }
+    
+    private static void searchStudent(Scanner scanner) {
+        System.out.print("Enter roll number: ");
+        int rollNumber = scanner.nextInt();
+        
+        Student student = sms.searchStudent(rollNumber);
+        if (student != null) {
+            System.out.println(student);
+        } else {
+            System.out.println("Student not found.");
+        }
+    }
+    
+    private static void loadStudentData() {
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(FILE_NAME))) {
+            sms = (StudentManagementSystem) ois.readObject();
+        } catch (FileNotFoundException e) {
+            System.out.println("No existing data found. Starting fresh.");
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    private static void saveStudentData() {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(FILE_NAME))) {
+            oos.writeObject(sms);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
